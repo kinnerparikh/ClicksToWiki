@@ -5,57 +5,59 @@ import re
 regex = re.compile('(?:a href=("\/wiki\/[^:]*?"))')
 
 
-def bfs(start_url, end_url, shortcut_mapping):
-    shortcut_mapping[end_url] = None
+
+def bfs(homeURL, destURL):
+    sMap = {}
+    sMap[destURL] = None
 
     q = queue.Queue()
     parents = {}
-    dist = 0
-    curr_path = []
-    path_dist = float("inf")
+    distance = 0
+    currPath = []
+    pathDistance = float("inf")
 
-    parents[start_url] = None
-    q.put(start_url)
+    parents[homeURL] = None
+    q.put(homeURL)
 
-    if start_url == end_url:
-        return [start_url, end_url]
+    if homeURL == destURL:
+        return [homeURL, destURL]
 
     while not q.empty():
-
         current = q.get()
-        dist += 1
+        distance += 1
 
-        print("Working with " + current)
-        if dist >= path_dist:
-            return curr_path
+        print(current)
 
-        for nbr in get_Links(current, regex):
+        if distance >= pathDistance:
+            return currPath
 
-            if nbr == end_url:
-                parents[nbr] = current
-                path = path_traceback(parents, nbr)
-                add_path_to_mapping(path, shortcut_mapping)
+        for currURL in links(current, regex):
+
+            if currURL == destURL:
+                parents[currURL] = current
+                path = pathCall(parents, currURL)
+                pathToSMap(path, sMap)
                 return path
 
-            elif nbr in shortcut_mapping:
-                parents[nbr] = current
-                print("Found shortcut for " + nbr + " to end")
-                path = path_traceback(parents, nbr)
-                ending = path_traceback(shortcut_mapping, nbr)
+            elif currURL in sMap:
+                parents[currURL] = current
+                print("Found shortcut for " + currURL + " to end")
+                path = pathCall(parents, currURL)
+                ending = pathCall(sMap, currURL)
                 ending.reverse()
-                ending.remove(nbr)
-                curr_path = path + ending
-                path_dist = len(curr_path) - 1
+                ending.remove(currURL)
+                currPath = path + ending
+                pathDistance = len(currPath) - 1
 
             else:
-                if nbr not in parents:
-                    parents[nbr] = current
-                    q.put(nbr)
+                if currURL not in parents:
+                    parents[currURL] = current
+                    q.put(currURL)
 
-    return curr_path
+    return currPath
 
 
-def path_traceback(parents, end):
+def pathCall(parents, end):
 
     path = [end]
     current = end
@@ -67,19 +69,19 @@ def path_traceback(parents, end):
     return path
 
 
-def add_path_to_mapping(path, shortcut_mapping):
+def pathToSMap(path, sMap):
 
-    for idx in range(len(path) - 1):
-        shortcut_mapping[path[idx]] = path[idx + 1]
+    for i in range(len(path) - 1):
+        sMap[path[i]] = path[i + 1]
 
-def get_Links(url_in, regex):
+def links(inputURL, regex):
 
-    resp = urllib.request.urlopen(url_in)
-    html = str(resp.read())
+    request = urllib.request.urlopen(inputURL)
+    html = str(request.read())
 
-    links_set = set([])
+    links = set([])
 
     for link in regex.findall(html):
-        links_set.add("http://en.wikipedia.org" + link.split("\"")[1])
+        links.add("http://en.wikipedia.org" + link.split("\"")[1])
 
-    return links_set
+    return links
