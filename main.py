@@ -2,7 +2,6 @@ import bfs
 
 
 startURL = input("Input Start Wikipedia URL: ")
-endURL = input("Input End Wikipedia URL: ")
-print(bfs.bfs(startURL, endURL))
+print(bfs.bfs(startURL, "https://en.wikipedia.org/wiki/Toilet_paper_orientation"))
 
 
